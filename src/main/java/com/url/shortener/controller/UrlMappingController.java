@@ -2,13 +2,20 @@ package com.url.shortener.controller;
 
 import com.url.shortener.dto.ClickEventDTO;
 import com.url.shortener.dto.request.CreateUrlRequest;
+import com.url.shortener.dto.response.DeviceStatsResponse;
 import com.url.shortener.dto.response.UrlMappingResponse;
 import com.url.shortener.entity.User;
+import com.url.shortener.util.QrCodeGenerator;
+import org.springframework.beans.factory.annotation.Value;
+import com.url.shortener.exception.UrlNotFoundException;
+import com.url.shortener.repository.UrlMappingRepository;
+import com.url.shortener.repository.UserRepository;
 import com.url.shortener.service.UrlMappingService;
 import com.url.shortener.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +33,8 @@ import java.util.Map;
 public class UrlMappingController {
     private final UrlMappingService urlMappingService;
     private final UserService userService;
+    private final UrlMappingRepository urlMappingRepository;
+
 
     @PostMapping("/shorten")
     @PreAuthorize("hasRole('USER')")
@@ -68,4 +77,31 @@ public class UrlMappingController {
         Map<LocalDate, Long> totalClicksByUserAndDate = urlMappingService.getTotalClicksByUserAndDate(user, start, end);
         return ResponseEntity.ok(totalClicksByUserAndDate);
     }
+
+    @Value("${app.base-url}")
+    private String baseUrl;
+
+    @GetMapping("/{shortUrl}/qrcode")
+    public ResponseEntity<byte[]> getQrCode(@PathVariable String shortUrl) {
+        urlMappingRepository.findByShortUrl(shortUrl)
+                .orElseThrow(() -> new UrlNotFoundException("Short URL not found: " + shortUrl));
+
+        String fullShortUrl = baseUrl + "/" + shortUrl;
+
+        try {
+            byte[] qrCodeImage = QrCodeGenerator.generate(fullShortUrl);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(qrCodeImage);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate QR code", e);
+        }
+    }
+    @GetMapping("/analytics/{shortUrl}/devices")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<DeviceStatsResponse> getDeviceStats(@PathVariable String shortUrl) {
+        DeviceStatsResponse stats = urlMappingService.getDeviceStats(shortUrl);
+        return ResponseEntity.ok(stats);
+    }
+
 }
