@@ -47,6 +47,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUrlExpired(UrlExpiredException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.GONE, "URL_EXPIRED", ex.getMessage(), request);
     }
+    @ExceptionHandler(UrlOwnershipException.class)
+    public ResponseEntity<ErrorResponse> handleUrlOwnership(UrlOwnershipException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.FORBIDDEN, "URL_ACCESS_DENIED", ex.getMessage(), request);
+    }
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String error, String message, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse();

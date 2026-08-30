@@ -11,6 +11,7 @@ import com.url.shortener.entity.User;
 import com.url.shortener.exception.AliasAlreadyTakenException;
 import com.url.shortener.exception.UrlExpiredException;
 import com.url.shortener.exception.UrlNotFoundException;
+import com.url.shortener.exception.UrlOwnershipException;
 import com.url.shortener.kafka.ClickEventProducer;
 import com.url.shortener.repository.ClickEventRepository;
 import com.url.shortener.repository.UrlMappingRepository;
@@ -196,5 +197,16 @@ public class UrlMappingService {
         response.setTabletClicks(tabletCount);
         response.setUnknownClicks(unknownCount);
         return response;
+    }
+    public void deleteUrl(String shortUrl, User user) {
+        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl)
+                .orElseThrow(() -> new UrlNotFoundException("Short URL not found: " + shortUrl));
+
+        if (!urlMapping.getUser().getId().equals(user.getId())) {
+            throw new UrlOwnershipException("You do not have permission to delete this URL");
+        }
+
+        urlMappingRepository.delete(urlMapping);
+        redisTemplate.delete(CACHE_PREFIX + shortUrl);
     }
 }
