@@ -2,12 +2,7 @@
 
 **A production-hardened URL shortener** — built as a follow-up portfolio project to [GatewayX](https://github.com/aroravivek398/gatewayx), applying the same engineering rigor (testing, Docker, AWS deployment, async processing) to a genuinely different domain, with a full React frontend on top.
 
-🔗 **Live app:** https://url-shortener-rose-theta.vercel.app
-🔗 **Live API:** https://13.127.199.47.sslip.io
 
-> **Note:** the backend runs on a personal AWS EC2 instance that is stopped when not actively in use, to manage cloud costs. If the live links above aren't responding, the instance is likely stopped — reach out and I'll spin it back up, or see the [Running Locally](#running-locally) section below to run it yourself.
-
----
 
 ## What ShortLink Does
 
